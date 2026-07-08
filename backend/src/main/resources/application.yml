@@ -1,0 +1,41 @@
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: verkehrsschule-api
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:haudis}
+    username: ${DB_USER:haudis}
+    password: ${DB_PASSWORD:haudis}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  # false for local http dev; must be true once served over https.
+  cookie-secure: ${COOKIE_SECURE:false}
+  jwt:
+    # Must match JWT_SECRET on the Next.js side (src/proxy.ts, server.ts) - same
+    # HS256 secret verifies the cookie on both ends.
+    secret: ${JWT_SECRET}
+    cookie-name: session
+    ttl-seconds: ${JWT_TTL_SECONDS:604800}
+  cors:
+    # Comma-separated list of allowed origins, e.g. https://haudis-verkehrsschule.ch
+    allowed-origins: ${FRONTEND_ORIGIN:http://localhost:3000}
+  realtime:
+    next-internal-url: ${NEXT_INTERNAL_URL:http://localhost:3000}
+    shared-secret: ${INTERNAL_REALTIME_SECRET:}
+
+logging:
+  level:
+    org.springframework.security: INFO
