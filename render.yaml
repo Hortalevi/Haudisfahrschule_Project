@@ -1,0 +1,70 @@
+envVarGroups:
+  - name: haudis-shared-secrets
+    envVars:
+      # Same value must reach both services - JWT issued by the backend is
+      # verified independently by the frontend's middleware (src/lib/jwt.ts).
+      - key: JWT_SECRET
+        generateValue: true
+      - key: INTERNAL_REALTIME_SECRET
+        generateValue: true
+
+databases:
+  - name: haudis-postgres
+    databaseName: haudis
+    user: haudis
+    plan: free
+
+services:
+  - type: web
+    name: haudis-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    envVarGroups:
+      - haudis-shared-secrets
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: haudis-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: haudis-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: haudis-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: haudis-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: haudis-postgres
+          property: password
+      - key: FRONTEND_ORIGIN
+        value: https://haudis-frontend.onrender.com
+      - key: NEXT_INTERNAL_URL
+        value: https://haudis-frontend.onrender.com
+      - key: COOKIE_SECURE
+        value: "true"
+
+  - type: web
+    name: haudis-frontend
+    runtime: node
+    # --include=dev is required: Render sets NODE_ENV=production during
+    # install, which would otherwise skip typescript/tailwindcss/tsx even
+    # though the build (and the production start command, via tsx) needs them.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm run start
+    plan: free
+    envVarGroups:
+      - haudis-shared-secrets
+    envVars:
+      - key: JAVA_API_URL
+        value: https://haudis-backend.onrender.com
+      - key: NODE_VERSION
+        value: 24.14.1

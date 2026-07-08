@@ -1,5 +1,6 @@
 server:
-  port: ${SERVER_PORT:8080}
+  # Render (and most PaaS hosts) inject PORT and require the app to bind to it.
+  port: ${PORT:${SERVER_PORT:8080}}
   forward-headers-strategy: framework
 
 spring:

@@ -183,6 +183,22 @@ npm run build && npm run start     # production build
 
 `npm run dev` / `npm run start` run `server.ts` (not plain `next dev`/`next start`) so the realtime WebSocket relay and the internal realtime-ingest endpoint are attached to the same HTTP server as the site.
 
+## Deploying to Render
+
+The repo includes a `render.yaml` [Blueprint](https://render.com/docs/blueprint-spec) that provisions all three pieces (Postgres, the Java backend, the Next.js frontend) in one go, with `JWT_SECRET`/`INTERNAL_REALTIME_SECRET` auto-generated and shared between both services via an env var group.
+
+1. Push this repo to GitHub (already done if you're reading this from the repo).
+2. In the Render dashboard: **New → Blueprint**, connect this repo. Render will read `render.yaml` and show you three resources to create: `haudis-postgres`, `haudis-backend`, `haudis-frontend`.
+3. Click **Apply**. Render builds the backend from `backend/Dockerfile` and the frontend via `npm install --include=dev && npm run build` / `npm run start`, and wires up `DB_HOST`/`DB_PORT`/etc. from the Postgres instance automatically.
+4. The blueprint assumes the services end up at `https://haudis-backend.onrender.com` and `https://haudis-frontend.onrender.com` (Render's default naming). **If either name is already taken**, Render will suffix it (e.g. `haudis-backend-ab12`) — in that case, open each service's **Environment** tab and fix up the URL it's pointing at the other service (`JAVA_API_URL` on the frontend, `FRONTEND_ORIGIN`/`NEXT_INTERNAL_URL` on the backend) to match the real assigned hostnames, then trigger a manual redeploy of both.
+5. First boot runs the Flyway migrations automatically (schema + seed content + the two mock accounts) — the site is immediately usable with the credentials in "Mock accounts" above.
+6. Free-tier caveats (fine for a temporary demo, not for real production use):
+   - Free web services spin down after 15 minutes of inactivity — the first request after idle will be slow (cold start), and a JVM app on the free 512 MB instance can be tight; upgrade `haudis-backend` to the Starter plan if it fails to boot or OOMs.
+   - Render's free Postgres databases expire (are deleted) after a fixed period — don't leave real data on it long-term.
+7. To point a custom domain at either service later, use Render's per-service **Settings → Custom Domains**, then update `FRONTEND_ORIGIN`/`JAVA_API_URL` to match.
+
+If you'd rather set it up by hand instead of via the Blueprint: create the Postgres database first, then two Web Services (backend: Docker runtime, root directory `backend`; frontend: Node runtime, the build/start commands from `render.yaml`), and copy the environment variables from the table above between them manually — the values must match exactly for `JWT_SECRET` and `INTERNAL_REALTIME_SECRET`.
+
 ## Before going live
 
 - Change or delete the seeded mock accounts (see "Handing off to the client" above) and rotate `JWT_SECRET`.
