@@ -22,9 +22,8 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
-    envVarGroups:
-      - haudis-shared-secrets
     envVars:
+      - fromGroup: haudis-shared-secrets
       - key: DB_HOST
         fromDatabase:
           name: haudis-postgres
@@ -61,9 +60,8 @@ services:
     buildCommand: npm install --include=dev && npm run build
     startCommand: npm run start
     plan: free
-    envVarGroups:
-      - haudis-shared-secrets
     envVars:
+      - fromGroup: haudis-shared-secrets
       - key: JAVA_API_URL
         value: https://haudis-backend.onrender.com
       - key: NODE_VERSION
