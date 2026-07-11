@@ -2,7 +2,11 @@ name: Keep Render Alive
 
 on:
   schedule:
-    - cron: '*/14 * * * *' # every 14 minutes
+    # Every 10 min, offset from :00/:10/... to dodge GitHub's top-of-hour
+    # scheduling congestion. Render's free tier sleeps after 15 min idle,
+    # and scheduled GitHub Actions runs can be delayed by several minutes,
+    # so 14 min left almost no buffer and the service kept sleeping anyway.
+    - cron: '4,14,24,34,44,54 * * * *'
   workflow_dispatch: # allow manual runs for testing
 
 jobs:
