@@ -14,7 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping frontend
-        run: curl -sS -o /dev/null -w "frontend: %{http_code}\n" https://haudis-frontend.onrender.com/
+        run: |
+          curl -sS -o /dev/null -w "frontend: %{http_code}\n" https://haudis-frontend.onrender.com/
 
       - name: Ping backend
-        run: curl -sS -o /dev/null -w "backend: %{http_code}\n" https://haudis-backend.onrender.com/api/public/site-settings
+        run: |
+          curl -sS -o /dev/null -w "backend: %{http_code}\n" https://haudis-backend.onrender.com/api/public/site-settings
