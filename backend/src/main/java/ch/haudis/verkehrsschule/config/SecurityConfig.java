@@ -45,6 +45,9 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+                        // Uptime monitors (e.g. UptimeRobot) send HEAD by default,
+                        // which must be allowed anywhere GET is public.
+                        .requestMatchers(HttpMethod.HEAD, "/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/public/registrations").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/users/me").authenticated()
