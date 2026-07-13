@@ -4,6 +4,7 @@ import { Eyebrow, Section } from "@/components/ui/section";
 import { RegistrationFlow } from "@/components/sections/registration-flow";
 import { getAllCourseDates } from "@/lib/course-dates";
 import { getAllCourses } from "@/lib/courses";
+import { getPublicInstructors } from "@/lib/users";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,11 @@ export const metadata: Metadata = {
 };
 
 export default async function KursdatenAnmeldungPage() {
-  const [dates, courses] = await Promise.all([getAllCourseDates(), getAllCourses()]);
+  const [dates, courses, instructors] = await Promise.all([
+    getAllCourseDates(),
+    getAllCourses(),
+    getPublicInstructors(),
+  ]);
 
   return (
     <>
@@ -34,7 +39,7 @@ export default async function KursdatenAnmeldungPage() {
 
       <Section>
         <Container>
-          <RegistrationFlow dates={dates} courses={courses} />
+          <RegistrationFlow dates={dates} courses={courses} instructors={instructors} />
         </Container>
       </Section>
     </>

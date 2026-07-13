@@ -1,10 +1,11 @@
 import { Card } from "@/components/ui/card";
-import { getRevenueBreakdown } from "@/lib/stats";
+import { getRevenueBreakdown, getCommissionBreakdown } from "@/lib/stats";
+import { RevenueChart } from "./revenue-chart";
 
 export const dynamic = "force-dynamic";
 
 export default async function UmsatzPage() {
-  const stats = await getRevenueBreakdown();
+  const [stats, commissions] = await Promise.all([getRevenueBreakdown(), getCommissionBreakdown()]);
 
   return (
     <div>
@@ -25,6 +26,14 @@ export default async function UmsatzPage() {
           <p className="mt-1 font-display text-2xl font-bold text-ember-800">CHF {stats.totalProfit}.–</p>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <h2 className="font-display text-lg font-bold text-navy-950">Umsatz pro Kurs</h2>
+        <p className="mt-1 text-sm text-sand-600">Wie viel jeder Kurstyp insgesamt eingebracht hat.</p>
+        <div className="mt-5">
+          <RevenueChart perCourse={stats.perCourse} />
+        </div>
+      </Card>
 
       <Card className="mt-6">
         <h2 className="font-display text-lg font-bold text-navy-950">Pro Kurs</h2>
@@ -49,6 +58,33 @@ export default async function UmsatzPage() {
                   <td className="py-2.5 pr-3 text-sand-600">CHF {c.revenue}.–</td>
                   <td className="py-2.5 pr-3 text-sand-600">CHF {c.cost}.–</td>
                   <td className="py-2.5 font-semibold text-ember-800">CHF {c.profit}.–</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="mt-6">
+        <h2 className="font-display text-lg font-bold text-navy-950">Provisionen</h2>
+        <p className="mt-1 text-sm text-sand-600">
+          Zugewiesene Studierende und generierter Umsatz pro Fahrlehrer/-in - Basis für die Provisionsauszahlung.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs uppercase tracking-wide text-sand-500">
+                <th className="py-2 pr-3">Fahrlehrer/-in</th>
+                <th className="py-2 pr-3">Studierende</th>
+                <th className="py-2">Umsatz</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-navy-900/8">
+              {commissions.instructors.map((i) => (
+                <tr key={i.id}>
+                  <td className="py-2.5 pr-3 font-semibold text-navy-900">{i.name}</td>
+                  <td className="py-2.5 pr-3 text-sand-600">{i.studentsAssigned}</td>
+                  <td className="py-2.5 font-semibold text-ember-800">CHF {i.revenueGenerated}.–</td>
                 </tr>
               ))}
             </tbody>

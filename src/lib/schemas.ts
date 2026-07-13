@@ -8,6 +8,7 @@ export const registrationSchema = z.object({
   courseDateId: z.string().min(1, "Bitte wähle einen Kurs bzw. Termin aus."),
   language: z.string().min(1, "Bitte wähle deine bevorzugte Sprache aus."),
   message: z.string().trim().max(1000).optional().or(z.literal("")),
+  recommendedInstructorId: z.string().optional().or(z.literal("")),
   consent: z.boolean().refine((v) => v === true, {
     message: "Bitte akzeptiere die Datenschutzerklärung.",
   }),

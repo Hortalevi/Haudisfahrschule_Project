@@ -11,4 +11,8 @@ public record RegistrationRequest(
         @NotBlank @Email(message = "Bitte gib eine gültige E-Mail-Adresse an.") String email,
         @NotBlank @Size(min = 6, message = "Bitte gib eine gültige Telefonnummer an.") String phone,
         @NotBlank(message = "Bitte wähle deine bevorzugte Sprache aus.") String language,
-        @Size(max = 1000) String message) {}
+        @Size(max = 1000) String message,
+        // Optional - who recommended the student. Becomes the assigned (commission
+        // credit) instructor instead of the course date's teaching instructor when
+        // present; see RegistrationService.create().
+        String recommendedInstructorId) {}

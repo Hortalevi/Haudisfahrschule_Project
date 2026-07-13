@@ -100,4 +100,35 @@ class UserServiceTest {
                 .isInstanceOf(ApiException.class)
                 .hasMessageContaining("existiert bereits");
     }
+
+    @Test
+    void generatesAUsernameFromTheInstructorsName() {
+        when(users.existsByEmail(any())).thenReturn(false);
+        when(users.existsByUsername(any())).thenReturn(false);
+        when(users.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordEncoder.encode(any())).thenReturn("hashed");
+
+        CreateUserRequest request =
+                new CreateUserRequest("Nadja Frei", "nadja@example.com", "password123", false, true);
+
+        AppUser result = userService.create(request);
+
+        assertThat(result.getUsername()).isEqualTo("nfr");
+    }
+
+    @Test
+    void appendsASuffixWhenTheGeneratedUsernameIsAlreadyTaken() {
+        when(users.existsByEmail(any())).thenReturn(false);
+        when(users.existsByUsername("nfr")).thenReturn(true);
+        when(users.existsByUsername("nfr2")).thenReturn(false);
+        when(users.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordEncoder.encode(any())).thenReturn("hashed");
+
+        CreateUserRequest request =
+                new CreateUserRequest("Nadja Frei", "nadja2@example.com", "password123", false, true);
+
+        AppUser result = userService.create(request);
+
+        assertThat(result.getUsername()).isEqualTo("nfr2");
+    }
 }

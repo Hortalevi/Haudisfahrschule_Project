@@ -21,10 +21,13 @@ const baseNavItems = [
   { href: "/instructor/dashboard/angebote", label: "Angebote", icon: BookOpen },
   { href: "/instructor/dashboard/kalender", label: "Kalender", icon: CalendarDays },
   { href: "/instructor/dashboard/anmeldungen", label: "Anmeldungen", icon: ClipboardList },
-  { href: "/instructor/dashboard/umsatz", label: "Umsatz", icon: BarChart3 },
 ];
 
+// Money is admin-only (see backend SecurityConfig: /api/stats/revenue and
+// /api/stats/commissions require ROLE_ADMIN) - a plain instructor must not
+// see how much the school makes, even if they can also teach.
 const adminNavItems = [
+  { href: "/instructor/dashboard/umsatz", label: "Umsatz", icon: BarChart3 },
   { href: "/instructor/dashboard/website", label: "Website", icon: Globe },
   { href: "/instructor/dashboard/benutzer", label: "Benutzer", icon: Users },
 ];

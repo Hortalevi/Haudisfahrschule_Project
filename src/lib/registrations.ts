@@ -13,6 +13,10 @@ export type RegistrationRow = {
   language: string;
   message: string | null;
   status: "CONFIRMED" | "CANCELLED";
+  paymentStatus: "PENDING" | "PAID";
+  internalNotes: string | null;
+  assignedInstructorId: string | null;
+  assignedInstructorName: string | null;
   createdAt: string;
 };
 

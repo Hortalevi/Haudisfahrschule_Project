@@ -53,6 +53,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/users/me").authenticated()
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/content/**").hasRole("ADMIN")
+                        // Money is admin-only: an instructor may teach and be assigned
+                        // students, but only the admin sees revenue/commission figures
+                        // or reassigns commission credit between instructors.
+                        .requestMatchers(HttpMethod.GET, "/api/stats/revenue", "/api/stats/commissions")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/registrations/*/assign-instructor")
+                        .hasRole("ADMIN")
                         .requestMatchers(
                                 "/api/courses/**",
                                 "/api/course-dates/**",

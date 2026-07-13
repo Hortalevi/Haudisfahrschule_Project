@@ -1,5 +1,6 @@
 package ch.haudis.verkehrsschule.web.dto;
 
+import ch.haudis.verkehrsschule.domain.PaymentStatus;
 import ch.haudis.verkehrsschule.domain.Registration;
 import ch.haudis.verkehrsschule.domain.RegistrationStatus;
 import java.time.Instant;
@@ -16,6 +17,10 @@ public record RegistrationResponse(
         String language,
         String message,
         RegistrationStatus status,
+        PaymentStatus paymentStatus,
+        String internalNotes,
+        String assignedInstructorId,
+        String assignedInstructorName,
         Instant createdAt) {
     public static RegistrationResponse from(Registration r) {
         return new RegistrationResponse(
@@ -30,6 +35,10 @@ public record RegistrationResponse(
                 r.getLanguage(),
                 r.getMessage(),
                 r.getStatus(),
+                r.getPaymentStatus(),
+                r.getInternalNotes(),
+                r.getAssignedInstructor() != null ? r.getAssignedInstructor().getId().toString() : null,
+                r.getAssignedInstructor() != null ? r.getAssignedInstructor().getName() : null,
                 r.getCreatedAt());
     }
 }

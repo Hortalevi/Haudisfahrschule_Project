@@ -11,6 +11,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByUsername(String username);
+
     List<AppUser> findAllByOrderByNameAsc();
 
     List<AppUser> findByInstructorTrueOrderByNameAsc();

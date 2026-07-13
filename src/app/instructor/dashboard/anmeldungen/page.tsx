@@ -2,21 +2,25 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { getAllCourseDatesForDashboard } from "@/lib/course-dates";
 import { getAllRegistrations, type RegistrationRow as RegistrationRowData } from "@/lib/registrations";
+import { getAllInstructors } from "@/lib/users";
 import { RegistrationRow } from "./registration-row";
+import { AddRegistrationForm } from "./add-registration-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function AnmeldungenPage() {
-  const [dates, registrations] = await Promise.all([getAllCourseDatesForDashboard(), getAllRegistrations()]);
+  const [dates, registrations, instructors] = await Promise.all([
+    getAllCourseDatesForDashboard(),
+    getAllRegistrations(),
+    getAllInstructors(),
+  ]);
 
   const registrationsByDate = new Map<string, RegistrationRowData[]>();
   for (const r of registrations) {
     registrationsByDate.set(r.courseDateId, [...(registrationsByDate.get(r.courseDateId) ?? []), r]);
   }
 
-  const withRegistrations = dates
-    .map((d) => ({ ...d, registrations: registrationsByDate.get(d.id) ?? [] }))
-    .filter((d) => d.registrations.length > 0);
+  const withRegistrations = dates.map((d) => ({ ...d, registrations: registrationsByDate.get(d.id) ?? [] }));
 
   return (
     <div>
@@ -25,7 +29,7 @@ export default async function AnmeldungenPage() {
 
       <div className="mt-6 rounded-xl border border-navy-900/8 bg-white px-5 shadow-soft">
         {withRegistrations.length === 0 ? (
-          <p className="py-6 text-sm text-sand-600">Noch keine Anmeldungen.</p>
+          <p className="py-6 text-sm text-sand-600">Noch keine Kurstermine.</p>
         ) : (
           <Accordion type="multiple" defaultValue={[withRegistrations[0]?.id ?? ""]}>
             {withRegistrations.map((date) => {
@@ -44,25 +48,33 @@ export default async function AnmeldungenPage() {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm">
-                        <thead>
-                          <tr className="text-xs uppercase tracking-wide text-sand-500">
-                            <th className="py-2 pr-3">Name</th>
-                            <th className="py-2 pr-3">E-Mail</th>
-                            <th className="py-2 pr-3">Telefon</th>
-                            <th className="py-2 pr-3">Sprache</th>
-                            <th className="py-2 pr-3">Status</th>
-                            <th className="py-2" />
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-navy-900/8">
-                          {date.registrations.map((r) => (
-                            <RegistrationRow key={r.id} registration={r} />
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    {date.registrations.length === 0 ? (
+                      <p className="pb-3 text-sm text-sand-600">Noch keine Anmeldungen.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                          <thead>
+                            <tr className="text-xs uppercase tracking-wide text-sand-500">
+                              <th className="py-2 pr-3">Name</th>
+                              <th className="py-2 pr-3">E-Mail</th>
+                              <th className="py-2 pr-3">Telefon</th>
+                              <th className="py-2 pr-3">Sprache</th>
+                              <th className="py-2 pr-3">Empfehlung</th>
+                              <th className="py-2 pr-3">Zahlung</th>
+                              <th className="py-2 pr-3">Notiz</th>
+                              <th className="py-2 pr-3">Status</th>
+                              <th className="py-2" />
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-navy-900/8">
+                            {date.registrations.map((r) => (
+                              <RegistrationRow key={r.id} registration={r} />
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    <AddRegistrationForm courseDateId={date.id} instructors={instructors} />
                   </AccordionContent>
                 </AccordionItem>
               );

@@ -33,3 +33,17 @@ export type RevenueBreakdown = {
 export async function getRevenueBreakdown(): Promise<RevenueBreakdown> {
   return apiGet<RevenueBreakdown>("/stats/revenue");
 }
+
+export type CommissionBreakdown = {
+  instructors: {
+    id: string;
+    name: string;
+    username: string;
+    studentsAssigned: number;
+    revenueGenerated: number;
+  }[];
+};
+
+export async function getCommissionBreakdown(): Promise<CommissionBreakdown> {
+  return apiGet<CommissionBreakdown>("/stats/commissions");
+}

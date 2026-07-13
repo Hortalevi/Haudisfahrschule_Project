@@ -2,6 +2,7 @@ package ch.haudis.verkehrsschule.web;
 
 import ch.haudis.verkehrsschule.repo.AppUserRepository;
 import ch.haudis.verkehrsschule.web.dto.InstructorSummaryResponse;
+import ch.haudis.verkehrsschule.web.dto.PublicInstructorResponse;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,5 +21,12 @@ public class InstructorController {
     @GetMapping("/api/instructors")
     public List<InstructorSummaryResponse> list() {
         return users.findByInstructorTrueOrderByNameAsc().stream().map(InstructorSummaryResponse::from).toList();
+    }
+
+    // Public - names only, for the "who recommended you" dropdown on the sign-up
+    // form (see SecurityConfig: GET /api/public/** is permitAll).
+    @GetMapping("/api/public/instructors")
+    public List<PublicInstructorResponse> publicList() {
+        return users.findByInstructorTrueOrderByNameAsc().stream().map(PublicInstructorResponse::from).toList();
     }
 }

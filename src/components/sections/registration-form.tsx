@@ -20,8 +20,8 @@ export type RegistrationFormHandle = {
 
 export const RegistrationForm = forwardRef<
   RegistrationFormHandle,
-  { defaultCourseDateId?: string; dates: CourseDate[] }
->(function RegistrationForm({ defaultCourseDateId, dates }, ref) {
+  { defaultCourseDateId?: string; dates: CourseDate[]; instructors: { id: string; name: string }[] }
+>(function RegistrationForm({ defaultCourseDateId, dates, instructors }, ref) {
     const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +42,7 @@ export const RegistrationForm = forwardRef<
         courseDateId: defaultCourseDateId ?? "",
         language: "Deutsch",
         message: "",
+        recommendedInstructorId: "",
         consent: false,
       },
     });
@@ -193,6 +194,30 @@ export const RegistrationForm = forwardRef<
               )}
             />
           </div>
+
+          {instructors.length > 0 && (
+            <div>
+              <Label htmlFor="recommendedInstructorId">Wer hat dich empfohlen? (optional)</Label>
+              <Controller
+                control={control}
+                name="recommendedInstructorId"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="recommendedInstructorId" aria-label="Wer hat dich empfohlen?">
+                      <SelectValue placeholder="Keine Angabe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {instructors.map((i) => (
+                        <SelectItem key={i.id} value={i.id}>
+                          {i.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="message">Nachricht (optional)</Label>

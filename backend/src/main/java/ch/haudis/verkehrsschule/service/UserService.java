@@ -32,8 +32,11 @@ public class UserService {
         if (users.existsByEmail(email)) {
             throw ApiException.conflict("Für diese E-Mail-Adresse existiert bereits ein Konto.");
         }
+        String name = request.name().trim();
+        String username = UsernameGenerator.unique(name, users::existsByUsername);
         AppUser user = AppUser.builder()
-                .name(request.name().trim())
+                .name(name)
+                .username(username)
                 .email(email)
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .admin(request.isAdmin())

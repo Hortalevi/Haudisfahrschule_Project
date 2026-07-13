@@ -1,11 +1,15 @@
 package ch.haudis.verkehrsschule.service;
 
+import ch.haudis.verkehrsschule.domain.AppUser;
 import ch.haudis.verkehrsschule.domain.CourseDate;
 import ch.haudis.verkehrsschule.domain.Registration;
 import ch.haudis.verkehrsschule.domain.RegistrationStatus;
+import ch.haudis.verkehrsschule.repo.AppUserRepository;
 import ch.haudis.verkehrsschule.repo.CourseDateRepository;
 import ch.haudis.verkehrsschule.repo.CourseRepository;
 import ch.haudis.verkehrsschule.repo.RegistrationRepository;
+import ch.haudis.verkehrsschule.web.dto.CommissionBreakdownResponse;
+import ch.haudis.verkehrsschule.web.dto.CommissionBreakdownResponse.InstructorCommissionEntry;
 import ch.haudis.verkehrsschule.web.dto.RegistrationResponse;
 import ch.haudis.verkehrsschule.web.dto.RevenueBreakdownResponse;
 import ch.haudis.verkehrsschule.web.dto.RevenueBreakdownResponse.CourseRevenueEntry;
@@ -27,11 +31,17 @@ public class StatsService {
     private final CourseRepository courses;
     private final CourseDateRepository courseDates;
     private final RegistrationRepository registrations;
+    private final AppUserRepository users;
 
-    public StatsService(CourseRepository courses, CourseDateRepository courseDates, RegistrationRepository registrations) {
+    public StatsService(
+            CourseRepository courses,
+            CourseDateRepository courseDates,
+            RegistrationRepository registrations,
+            AppUserRepository users) {
         this.courses = courses;
         this.courseDates = courseDates;
         this.registrations = registrations;
+        this.users = users;
     }
 
     @Transactional(readOnly = true)
@@ -99,5 +109,44 @@ public class StatsService {
                 .toList();
 
         return new RevenueBreakdownResponse(totalRevenue, totalCost, totalRevenue.subtract(totalCost), totalStudents, entries);
+    }
+
+    // Admin-only (see SecurityConfig) - students assigned & revenue generated per
+    // instructor, the basis for commission payouts. Every instructor appears, even
+    // with zero assigned students, so the admin sees the full roster at a glance.
+    @Transactional(readOnly = true)
+    public CommissionBreakdownResponse getCommissionBreakdown() {
+        record Accumulator(long students, long revenue) {}
+        Map<String, Accumulator> byInstructorId = new LinkedHashMap<>();
+
+        List<Registration> confirmed = registrations.findByStatusWithDetails(RegistrationStatus.CONFIRMED);
+        for (Registration registration : confirmed) {
+            AppUser instructor = registration.getAssignedInstructor();
+            if (instructor == null) {
+                continue;
+            }
+            String id = instructor.getId().toString();
+            Accumulator existing = byInstructorId.getOrDefault(id, new Accumulator(0, 0));
+            byInstructorId.put(
+                    id,
+                    new Accumulator(
+                            existing.students() + 1, existing.revenue() + registration.getCourseDate().getPrice()));
+        }
+
+        List<InstructorCommissionEntry> entries = users.findByInstructorTrueOrderByNameAsc().stream()
+                .map(instructor -> {
+                    Accumulator accumulator =
+                            byInstructorId.getOrDefault(instructor.getId().toString(), new Accumulator(0, 0));
+                    return new InstructorCommissionEntry(
+                            instructor.getId().toString(),
+                            instructor.getName(),
+                            instructor.getUsername(),
+                            accumulator.students(),
+                            accumulator.revenue());
+                })
+                .sorted(Comparator.comparingLong(InstructorCommissionEntry::revenueGenerated).reversed())
+                .toList();
+
+        return new CommissionBreakdownResponse(entries);
     }
 }

@@ -13,7 +13,9 @@ export default async function DashboardOverviewPage() {
     { label: "Aktive Angebote", value: stats.activeCourses, icon: BookOpen },
     { label: "Kommende Termine", value: stats.upcomingDates, icon: CalendarDays },
     { label: "Anmeldungen (Monat)", value: stats.studentsThisMonth, icon: Users },
-    { label: "Umsatz (Monat)", value: `CHF ${stats.revenueThisMonth}.–`, icon: Coins },
+    // Money is admin-only - the backend already zeroes this for non-admins,
+    // but a plain instructor shouldn't see the tile at all.
+    ...(user?.isAdmin ? [{ label: "Umsatz (Monat)", value: `CHF ${stats.revenueThisMonth}.–`, icon: Coins }] : []),
   ];
 
   return (
