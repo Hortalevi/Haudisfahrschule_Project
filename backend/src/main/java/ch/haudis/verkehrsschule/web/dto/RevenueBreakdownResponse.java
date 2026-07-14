@@ -11,5 +11,12 @@ public record RevenueBreakdownResponse(
         List<CourseRevenueEntry> perCourse) {
 
     public record CourseRevenueEntry(
-            String slug, String title, BigDecimal revenue, BigDecimal cost, long students, long sessions, BigDecimal profit) {}
+            String slug,
+            String title,
+            BigDecimal revenue,
+            BigDecimal cost,
+            long students,
+            long registrations,
+            long sessions,
+            BigDecimal profit) {}
 }

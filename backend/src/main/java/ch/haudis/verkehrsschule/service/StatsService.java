@@ -66,7 +66,7 @@ public class StatsService {
     public RevenueBreakdownResponse getRevenueBreakdown() {
         List<CourseDate> dates = courseDates.findAllWithDetails();
 
-        record Accumulator(BigDecimal revenue, BigDecimal cost, long students, long sessions) {}
+        record Accumulator(BigDecimal revenue, BigDecimal cost, long students, long registrations, long sessions) {}
         Map<String, Accumulator> perCourse = new LinkedHashMap<>();
         Map<String, String> titles = new LinkedHashMap<>();
         BigDecimal totalRevenue = BigDecimal.ZERO;
@@ -77,6 +77,10 @@ public class StatsService {
             long confirmed = date.getRegistrations().stream()
                     .filter(r -> r.getStatus() == RegistrationStatus.CONFIRMED)
                     .count();
+            // "Anmeldungen" = every sign-up received (incl. later cancelled), distinct
+            // from "Studierende" (confirmed only) - the two answer different questions
+            // (interest vs. actual attendance) for the course/instructor comparison charts.
+            long signups = date.getRegistrations().size();
             BigDecimal revenue = BigDecimal.valueOf(confirmed * date.getPrice());
             BigDecimal cost = date.getCourse().getCostPerSession();
 
@@ -86,13 +90,15 @@ public class StatsService {
 
             String slug = date.getCourse().getSlug();
             titles.put(slug, date.getCourse().getTitle());
-            Accumulator existing = perCourse.getOrDefault(slug, new Accumulator(BigDecimal.ZERO, BigDecimal.ZERO, 0, 0));
+            Accumulator existing =
+                    perCourse.getOrDefault(slug, new Accumulator(BigDecimal.ZERO, BigDecimal.ZERO, 0, 0, 0));
             perCourse.put(
                     slug,
                     new Accumulator(
                             existing.revenue().add(revenue),
                             existing.cost().add(cost),
                             existing.students() + confirmed,
+                            existing.registrations() + signups,
                             existing.sessions() + 1));
         }
 
@@ -103,6 +109,7 @@ public class StatsService {
                         e.getValue().revenue(),
                         e.getValue().cost(),
                         e.getValue().students(),
+                        e.getValue().registrations(),
                         e.getValue().sessions(),
                         e.getValue().revenue().subtract(e.getValue().cost())))
                 .sorted(Comparator.comparing(CourseRevenueEntry::revenue).reversed())
@@ -116,32 +123,39 @@ public class StatsService {
     // with zero assigned students, so the admin sees the full roster at a glance.
     @Transactional(readOnly = true)
     public CommissionBreakdownResponse getCommissionBreakdown() {
-        record Accumulator(long students, long revenue) {}
+        record Accumulator(long students, long registrations, long revenue) {}
         Map<String, Accumulator> byInstructorId = new LinkedHashMap<>();
 
-        List<Registration> confirmed = registrations.findByStatusWithDetails(RegistrationStatus.CONFIRMED);
-        for (Registration registration : confirmed) {
+        // All statuses, not just CONFIRMED - "Anmeldungen" counts every sign-up an
+        // instructor was credited with, while students/revenue below stay confirmed-only.
+        List<Registration> all = registrations.findAllWithDetails();
+        for (Registration registration : all) {
             AppUser instructor = registration.getAssignedInstructor();
             if (instructor == null) {
                 continue;
             }
+            boolean confirmed = registration.getStatus() == RegistrationStatus.CONFIRMED;
             String id = instructor.getId().toString();
-            Accumulator existing = byInstructorId.getOrDefault(id, new Accumulator(0, 0));
+            Accumulator existing = byInstructorId.getOrDefault(id, new Accumulator(0, 0, 0));
             byInstructorId.put(
                     id,
                     new Accumulator(
-                            existing.students() + 1, existing.revenue() + registration.getCourseDate().getPrice()));
+                            existing.students() + (confirmed ? 1 : 0),
+                            existing.registrations() + 1,
+                            existing.revenue() + (confirmed ? registration.getCourseDate().getPrice() : 0)));
         }
 
         List<InstructorCommissionEntry> entries = users.findByInstructorTrueOrderByNameAsc().stream()
                 .map(instructor -> {
                     Accumulator accumulator =
-                            byInstructorId.getOrDefault(instructor.getId().toString(), new Accumulator(0, 0));
+                            byInstructorId.getOrDefault(instructor.getId().toString(), new Accumulator(0, 0, 0));
                     return new InstructorCommissionEntry(
                             instructor.getId().toString(),
                             instructor.getName(),
                             instructor.getUsername(),
+                            instructor.getColor(),
                             accumulator.students(),
+                            accumulator.registrations(),
                             accumulator.revenue());
                 })
                 .sorted(Comparator.comparingLong(InstructorCommissionEntry::revenueGenerated).reversed())

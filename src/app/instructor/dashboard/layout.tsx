@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ClipboardList,
   BarChart3,
+  TrendingUp,
   LogOut,
   BookOpen,
   Globe,
@@ -28,6 +29,7 @@ const baseNavItems = [
 // see how much the school makes, even if they can also teach.
 const adminNavItems = [
   { href: "/instructor/dashboard/umsatz", label: "Umsatz", icon: BarChart3 },
+  { href: "/instructor/dashboard/statistik", label: "Statistik", icon: TrendingUp },
   { href: "/instructor/dashboard/website", label: "Website", icon: Globe },
   { href: "/instructor/dashboard/benutzer", label: "Benutzer", icon: Users },
 ];

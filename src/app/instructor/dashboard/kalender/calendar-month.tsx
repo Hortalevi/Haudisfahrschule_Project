@@ -12,8 +12,13 @@ export type CalendarEntry = {
   startsAt: string;
   location: string;
   instructorName: string | null;
+  instructorColor: string | null;
   seatsLabel: string;
 };
+
+// Fallback for dates nobody's assigned to yet - a neutral gray distinct from
+// every instructor's own (never-gray) palette slot, see InstructorColors.PALETTE.
+const UNASSIGNED_COLOR = "#8a8a8a";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const MONTH_NAMES = [
@@ -36,6 +41,13 @@ function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export function CalendarMonth({ entries }: { entries: CalendarEntry[] }) {
   const today = useMemo(() => new Date(), []);
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -50,6 +62,25 @@ export function CalendarMonth({ entries }: { entries: CalendarEntry[] }) {
       map.set(key, [...(map.get(key) ?? []), entry]);
     }
     return map;
+  }, [entries]);
+
+  // Legend: one entry per instructor actually teaching something this data set,
+  // in first-seen order - so color is never the only way to tell who's who.
+  const legend = useMemo(() => {
+    const seen = new Map<string, { name: string; color: string }>();
+    let hasUnassigned = false;
+    for (const entry of entries) {
+      if (!entry.instructorName || !entry.instructorColor) {
+        hasUnassigned = true;
+        continue;
+      }
+      if (!seen.has(entry.instructorName)) {
+        seen.set(entry.instructorName, { name: entry.instructorName, color: entry.instructorColor });
+      }
+    }
+    const items = Array.from(seen.values());
+    if (hasUnassigned) items.push({ name: "Kein Fahrlehrer zugewiesen", color: UNASSIGNED_COLOR });
+    return items;
   }, [entries]);
 
   return (
@@ -84,6 +115,17 @@ export function CalendarMonth({ entries }: { entries: CalendarEntry[] }) {
         </Button>
       </div>
 
+      {legend.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {legend.map((item) => (
+            <div key={item.name} className="flex items-center gap-1.5 text-xs font-semibold text-navy-800">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.name}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="mt-5 grid grid-cols-7 gap-1.5 text-xs font-semibold text-sand-500">
         {WEEKDAYS.map((day) => (
           <div key={day} className="px-1 pb-1 text-center">
@@ -116,16 +158,20 @@ export function CalendarMonth({ entries }: { entries: CalendarEntry[] }) {
                 {day.getDate()}
               </span>
               <div className="mt-1 space-y-1">
-                {dayEntries.map((entry) => (
-                  <Link
-                    key={entry.id}
-                    href={`/instructor/dashboard/kalender/${entry.id}`}
-                    className="focus-ring block truncate rounded bg-ember-500/10 px-1.5 py-1 text-[0.7rem] font-semibold text-ember-800 hover:bg-ember-500/20"
-                    title={`${entry.title} · ${entry.location} · ${entry.seatsLabel}`}
-                  >
-                    {entry.title}
-                  </Link>
-                ))}
+                {dayEntries.map((entry) => {
+                  const color = entry.instructorColor ?? UNASSIGNED_COLOR;
+                  return (
+                    <Link
+                      key={entry.id}
+                      href={`/instructor/dashboard/kalender/${entry.id}`}
+                      className="focus-ring block truncate rounded border-l-[3px] px-1.5 py-1 text-[0.7rem] font-semibold text-navy-900 hover:brightness-95"
+                      style={{ backgroundColor: hexToRgba(color, 0.14), borderLeftColor: color }}
+                      title={`${entry.title} · ${entry.instructorName ?? "Kein Fahrlehrer zugewiesen"} · ${entry.location} · ${entry.seatsLabel}`}
+                    >
+                      {entry.title}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           );

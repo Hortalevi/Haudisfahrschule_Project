@@ -7,5 +7,11 @@ import java.util.List;
 public record CommissionBreakdownResponse(List<InstructorCommissionEntry> instructors) {
 
     public record InstructorCommissionEntry(
-            String id, String name, String username, long studentsAssigned, long revenueGenerated) {}
+            String id,
+            String name,
+            String username,
+            String color,
+            long studentsAssigned,
+            long registrationsAssigned,
+            long revenueGenerated) {}
 }

@@ -33,6 +33,18 @@ export async function updateUserRoles(id: string, isAdmin: boolean, isInstructor
   revalidatePath("/instructor/dashboard/benutzer");
 }
 
+export async function updateUserColor(id: string, color: string): Promise<UserActionState> {
+  try {
+    await apiMutate(`/users/${id}/color`, "PATCH", { color });
+  } catch (e) {
+    if (e instanceof ApiError) return { error: e.message };
+    throw e;
+  }
+  revalidatePath("/instructor/dashboard/benutzer");
+  revalidatePath("/instructor/dashboard/kalender");
+  revalidatePath("/instructor/dashboard/statistik");
+}
+
 export async function deleteUser(id: string): Promise<UserActionState> {
   try {
     await apiMutate(`/users/${id}`, "DELETE");

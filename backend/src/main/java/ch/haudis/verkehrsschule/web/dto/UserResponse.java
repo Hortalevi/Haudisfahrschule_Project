@@ -10,6 +10,7 @@ public record UserResponse(
         String email,
         boolean isAdmin,
         boolean isInstructor,
+        String color,
         Instant createdAt) {
     public static UserResponse from(AppUser user) {
         return new UserResponse(
@@ -19,6 +20,7 @@ public record UserResponse(
                 user.getEmail(),
                 user.isAdmin(),
                 user.isInstructor(),
+                user.getColor(),
                 user.getCreatedAt());
     }
 }

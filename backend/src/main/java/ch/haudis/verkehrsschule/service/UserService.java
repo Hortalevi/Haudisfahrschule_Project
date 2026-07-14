@@ -1,6 +1,7 @@
 package ch.haudis.verkehrsschule.service;
 
 import ch.haudis.verkehrsschule.domain.AppUser;
+import ch.haudis.verkehrsschule.domain.InstructorColors;
 import ch.haudis.verkehrsschule.exception.ApiException;
 import ch.haudis.verkehrsschule.repo.AppUserRepository;
 import ch.haudis.verkehrsschule.web.dto.CreateUserRequest;
@@ -41,7 +42,15 @@ public class UserService {
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .admin(request.isAdmin())
                 .instructor(request.isInstructor())
+                .color(InstructorColors.forIndex(users.count()))
                 .build();
+        return users.save(user);
+    }
+
+    @Transactional
+    public AppUser updateColor(UUID id, String color) {
+        AppUser user = getOrThrow(id);
+        user.setColor(color);
         return users.save(user);
     }
 

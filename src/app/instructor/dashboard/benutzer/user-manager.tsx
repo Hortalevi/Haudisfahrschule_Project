@@ -7,9 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { createUser, deleteUser, updateUserRoles } from "./actions";
+import { createUser, deleteUser, updateUserColor, updateUserRoles } from "./actions";
 
-export type AppUser = { id: string; name: string; email: string; isAdmin: boolean; isInstructor: boolean };
+export type AppUser = {
+  id: string;
+  name: string;
+  email: string;
+  isAdmin: boolean;
+  isInstructor: boolean;
+  color: string;
+};
 
 function UserRow({ user, isLastAdmin, currentUserId }: { user: AppUser; isLastAdmin: boolean; currentUserId: string }) {
   const router = useRouter();
@@ -35,14 +42,39 @@ function UserRow({ user, isLastAdmin, currentUserId }: { user: AppUser; isLastAd
     });
   }
 
+  function changeColor(color: string) {
+    startTransition(async () => {
+      setError(null);
+      const result = await updateUserColor(user.id, color);
+      if (result?.error) setError(result.error);
+      router.refresh();
+    });
+  }
+
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="font-display font-bold text-navy-950">
-            {user.name} {user.id === currentUserId && <span className="text-xs font-normal text-sand-500">(du)</span>}
-          </p>
-          <p className="text-sm text-sand-600">{user.email}</p>
+        <div className="flex items-center gap-3">
+          <label
+            className="focus-ring relative h-7 w-7 shrink-0 cursor-pointer rounded-full border border-navy-900/10"
+            style={{ backgroundColor: user.color }}
+            title="Kalenderfarbe ändern"
+          >
+            <input
+              type="color"
+              value={user.color}
+              disabled={pending}
+              onChange={(e) => changeColor(e.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label={`Kalenderfarbe für ${user.name}`}
+            />
+          </label>
+          <div>
+            <p className="font-display font-bold text-navy-950">
+              {user.name} {user.id === currentUserId && <span className="text-xs font-normal text-sand-500">(du)</span>}
+            </p>
+            <p className="text-sm text-sand-600">{user.email}</p>
+          </div>
         </div>
         <div className="flex items-center gap-5">
           <label className="flex items-center gap-2 text-sm text-navy-800">

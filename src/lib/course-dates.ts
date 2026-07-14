@@ -15,6 +15,7 @@ export type CourseDateDashboardRow = {
   capacity: number;
   instructorId: string | null;
   instructorName: string | null;
+  instructorColor: string | null;
   notes: string | null;
   confirmedCount: number;
   createdAt: string;

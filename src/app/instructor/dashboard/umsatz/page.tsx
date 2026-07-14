@@ -43,6 +43,7 @@ export default async function UmsatzPage() {
               <tr className="text-xs uppercase tracking-wide text-sand-500">
                 <th className="py-2 pr-3">Kurs</th>
                 <th className="py-2 pr-3">Termine</th>
+                <th className="py-2 pr-3">Anmeldungen</th>
                 <th className="py-2 pr-3">Studierende</th>
                 <th className="py-2 pr-3">Umsatz</th>
                 <th className="py-2 pr-3">Kosten</th>
@@ -54,6 +55,7 @@ export default async function UmsatzPage() {
                 <tr key={c.slug}>
                   <td className="py-2.5 pr-3 font-semibold text-navy-900">{c.title}</td>
                   <td className="py-2.5 pr-3 text-sand-600">{c.sessions}</td>
+                  <td className="py-2.5 pr-3 text-sand-600">{c.registrations}</td>
                   <td className="py-2.5 pr-3 text-sand-600">{c.students}</td>
                   <td className="py-2.5 pr-3 text-sand-600">CHF {c.revenue}.–</td>
                   <td className="py-2.5 pr-3 text-sand-600">CHF {c.cost}.–</td>
@@ -75,6 +77,7 @@ export default async function UmsatzPage() {
             <thead>
               <tr className="text-xs uppercase tracking-wide text-sand-500">
                 <th className="py-2 pr-3">Fahrlehrer/-in</th>
+                <th className="py-2 pr-3">Anmeldungen</th>
                 <th className="py-2 pr-3">Studierende</th>
                 <th className="py-2">Umsatz</th>
               </tr>
@@ -82,7 +85,13 @@ export default async function UmsatzPage() {
             <tbody className="divide-y divide-navy-900/8">
               {commissions.instructors.map((i) => (
                 <tr key={i.id}>
-                  <td className="py-2.5 pr-3 font-semibold text-navy-900">{i.name}</td>
+                  <td className="py-2.5 pr-3 font-semibold text-navy-900">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: i.color }} />
+                      {i.name}
+                    </span>
+                  </td>
+                  <td className="py-2.5 pr-3 text-sand-600">{i.registrationsAssigned}</td>
                   <td className="py-2.5 pr-3 text-sand-600">{i.studentsAssigned}</td>
                   <td className="py-2.5 font-semibold text-ember-800">CHF {i.revenueGenerated}.–</td>
                 </tr>

@@ -25,6 +25,7 @@ export type RevenueBreakdown = {
     revenue: number;
     cost: number;
     students: number;
+    registrations: number;
     sessions: number;
     profit: number;
   }[];
@@ -39,7 +40,9 @@ export type CommissionBreakdown = {
     id: string;
     name: string;
     username: string;
+    color: string;
     studentsAssigned: number;
+    registrationsAssigned: number;
     revenueGenerated: number;
   }[];
 };

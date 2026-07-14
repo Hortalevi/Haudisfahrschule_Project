@@ -34,10 +34,4 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
                     + "left join fetch r.assignedInstructor "
                     + "order by r.createdAt desc limit 6")
     List<Registration> findTop6WithDetails();
-
-    @Query(
-            "select r from Registration r join fetch r.courseDate cd "
-                    + "left join fetch r.assignedInstructor "
-                    + "where r.status = :status")
-    List<Registration> findByStatusWithDetails(RegistrationStatus status);
 }

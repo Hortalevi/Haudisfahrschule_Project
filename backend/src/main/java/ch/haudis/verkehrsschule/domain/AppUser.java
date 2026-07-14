@@ -49,6 +49,13 @@ public class AppUser {
     @Column(name = "is_instructor", nullable = false)
     private boolean instructor;
 
+    // Identity color for the calendar and comparison charts (see InstructorColors).
+    // Defaulted here (not just on the create-user path) so a builder call that
+    // omits it - e.g. in tests - still satisfies the NOT NULL column.
+    @Builder.Default
+    @Column(nullable = false)
+    private String color = InstructorColors.PALETTE[0];
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

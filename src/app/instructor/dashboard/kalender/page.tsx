@@ -12,6 +12,7 @@ export default async function KalenderPage() {
     startsAt: d.startsAt,
     location: d.location,
     instructorName: d.instructorName,
+    instructorColor: d.instructorColor,
     seatsLabel: `${d.confirmedCount}/${d.capacity} Plätze`,
   }));
 

@@ -3,6 +3,7 @@ package ch.haudis.verkehrsschule.web;
 import ch.haudis.verkehrsschule.security.AuthenticatedUser;
 import ch.haudis.verkehrsschule.service.UserService;
 import ch.haudis.verkehrsschule.web.dto.CreateUserRequest;
+import ch.haudis.verkehrsschule.web.dto.UpdateColorRequest;
 import ch.haudis.verkehrsschule.web.dto.UpdateRolesRequest;
 import ch.haudis.verkehrsschule.web.dto.UserResponse;
 import jakarta.validation.Valid;
@@ -47,6 +48,11 @@ public class UserController {
     @PatchMapping("/{id}/roles")
     public UserResponse updateRoles(@PathVariable UUID id, @Valid @RequestBody UpdateRolesRequest request) {
         return UserResponse.from(userService.updateRoles(id, request));
+    }
+
+    @PatchMapping("/{id}/color")
+    public UserResponse updateColor(@PathVariable UUID id, @Valid @RequestBody UpdateColorRequest request) {
+        return UserResponse.from(userService.updateColor(id, request.color()));
     }
 
     @DeleteMapping("/{id}")

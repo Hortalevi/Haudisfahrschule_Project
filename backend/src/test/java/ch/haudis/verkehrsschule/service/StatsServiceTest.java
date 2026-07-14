@@ -50,11 +50,15 @@ class StatsServiceTest {
     }
 
     private Registration registrationFor(AppUser assignedInstructor, int price) {
+        return registrationFor(assignedInstructor, price, RegistrationStatus.CONFIRMED);
+    }
+
+    private Registration registrationFor(AppUser assignedInstructor, int price, RegistrationStatus status) {
         CourseDate courseDate = CourseDate.builder().price(price).build();
         return Registration.builder()
                 .courseDate(courseDate)
                 .assignedInstructor(assignedInstructor)
-                .status(RegistrationStatus.CONFIRMED)
+                .status(status)
                 .build();
     }
 
@@ -63,7 +67,7 @@ class StatsServiceTest {
         AppUser busy = instructor("Nadja Frei", "nfr");
         AppUser idle = instructor("Dario Keller", "dke");
         when(users.findByInstructorTrueOrderByNameAsc()).thenReturn(List.of(busy, idle));
-        when(registrations.findByStatusWithDetails(RegistrationStatus.CONFIRMED))
+        when(registrations.findAllWithDetails())
                 .thenReturn(List.of(registrationFor(busy, 100), registrationFor(busy, 150)));
 
         List<InstructorCommissionEntry> entries = statsService.getCommissionBreakdown().instructors();
@@ -71,14 +75,32 @@ class StatsServiceTest {
         InstructorCommissionEntry busyEntry =
                 entries.stream().filter(e -> e.username().equals("nfr")).findFirst().orElseThrow();
         assertThat(busyEntry.studentsAssigned()).isEqualTo(2);
+        assertThat(busyEntry.registrationsAssigned()).isEqualTo(2);
         assertThat(busyEntry.revenueGenerated()).isEqualTo(250);
+    }
+
+    @Test
+    void cancelledRegistrationsCountTowardsRegistrationsButNotStudentsOrRevenue() {
+        AppUser instructor = instructor("Nadja Frei", "nfr");
+        when(users.findByInstructorTrueOrderByNameAsc()).thenReturn(List.of(instructor));
+        when(registrations.findAllWithDetails())
+                .thenReturn(List.of(
+                        registrationFor(instructor, 100, RegistrationStatus.CONFIRMED),
+                        registrationFor(instructor, 100, RegistrationStatus.CANCELLED)));
+
+        InstructorCommissionEntry entry =
+                statsService.getCommissionBreakdown().instructors().get(0);
+
+        assertThat(entry.registrationsAssigned()).isEqualTo(2);
+        assertThat(entry.studentsAssigned()).isEqualTo(1);
+        assertThat(entry.revenueGenerated()).isEqualTo(100);
     }
 
     @Test
     void listsInstructorsWithNoAssignedStudentsAtZero() {
         AppUser idle = instructor("Dario Keller", "dke");
         when(users.findByInstructorTrueOrderByNameAsc()).thenReturn(List.of(idle));
-        when(registrations.findByStatusWithDetails(RegistrationStatus.CONFIRMED)).thenReturn(List.of());
+        when(registrations.findAllWithDetails()).thenReturn(List.of());
 
         List<InstructorCommissionEntry> entries = statsService.getCommissionBreakdown().instructors();
 
@@ -92,7 +114,7 @@ class StatsServiceTest {
         AppUser highEarner = instructor("Bruno Haudenschild", "bha");
         AppUser lowEarner = instructor("Livio Meier", "lme");
         when(users.findByInstructorTrueOrderByNameAsc()).thenReturn(List.of(lowEarner, highEarner));
-        when(registrations.findByStatusWithDetails(RegistrationStatus.CONFIRMED))
+        when(registrations.findAllWithDetails())
                 .thenReturn(List.of(registrationFor(highEarner, 500), registrationFor(lowEarner, 100)));
 
         List<InstructorCommissionEntry> entries = statsService.getCommissionBreakdown().instructors();
